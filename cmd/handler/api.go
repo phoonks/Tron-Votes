@@ -46,7 +46,7 @@ func (h *HttpServer) StartApiServer(c *cli.Context) error {
 
 	// freezeBalance()
 	// getVotePower()
-	getSpAddress()
+	getSrAddress()
 	// getClaimableReward()
 	// voteTransaction()
 
@@ -216,7 +216,7 @@ func getVotePower() {
 	fmt.Printf("Total Voted Power (in TRX): %d\n", totalVotedPower)
 }
 
-func getSpAddress() {
+func getSrAddress() {
 	// Connect to the Tron network
 	conn := client.NewGrpcClient(shastaDomain)
 	err := conn.Start(grpc.WithInsecure())
@@ -237,10 +237,22 @@ func getSpAddress() {
 	})
 
 	// Print SR addresses
+	totalVoted := int64(0)
+	for _, witness := range witnessList.Witnesses {
+		totalVoted += witness.VoteCount
+	}
+	fmt.Printf("Total Votes: %d \n\n", totalVoted)
+
 	fmt.Println("List of Super Representatives:")
 	for _, witness := range witnessList.Witnesses {
-		fmt.Printf("Address: %s, URL: %s, Last Round Votes: %d, Total Produced: %d \n\n", encodeAddress(witness.Address), witness.Url, witness.VoteCount, witness.TotalProduced)
+		percentage := (float64(witness.VoteCount) / float64(totalVoted)) * 100
+		reward, err := conn.GetRewardsInfo(encodeAddress(witness.Address))
+		if err != nil {
+			log.Fatalf("Failed to get SR RewardsInfo: %v", err)
+		}
+		fmt.Printf("Address: %s, URL: %s, Last Round Votes: %d, Reward: %.6f, Percentage: %.2f, Total Produced: %d \n\n", encodeAddress(witness.Address), witness.Url, witness.VoteCount, float64(reward)/1000000, percentage, witness.TotalProduced)
 	}
+
 }
 
 func getClaimableReward() {
@@ -261,6 +273,6 @@ func getClaimableReward() {
 	}
 
 	// Display Rewards
-	fmt.Printf("Claimable Rewards for address %s: %.6f TRX\n", ownAddress, float64(claimableRewards)/1_000_000)
+	fmt.Printf("Claimable Rewards for address %s: %.6f TRX\n", ownAddress, float64(claimableRewards)/1000000)
 
 }
