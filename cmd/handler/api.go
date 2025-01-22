@@ -28,6 +28,8 @@ const (
 	privateKeyHex = "d1455980b1f333aba7a1abf852216abfeec8b95b230b6f5bf1af21c0e4a0c898"
 )
 
+// https://shastapi.tronscan.org/api/vote/witness // get SRs list
+
 func (h *HttpServer) StartApiServer(c *cli.Context) error {
 	h.mtx.Lock()
 	defer h.mtx.Unlock()
